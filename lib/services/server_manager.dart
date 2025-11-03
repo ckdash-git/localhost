@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/services.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
@@ -63,6 +65,11 @@ class ServerManager {
       router.get('/api/hello', (Request request) {
         return Response.ok('{"message": "Hello from Flutter Server!", "timestamp": "${DateTime.now().toIso8601String()}"}', 
           headers: {'Content-Type': 'application/json'});
+      });
+
+      // Certificate download route
+      router.get('/cert', (Request request) async {
+        return await _serveCertificate();
       });
 
       // Create middleware pipeline
@@ -290,6 +297,29 @@ class ServerManager {
 </body>
 </html>
     ''';
+  }
+
+  // Serve certificate file for iOS download
+  Future<Response> _serveCertificate() async {
+    try {
+      // Load certificate from assets
+      final ByteData data = await rootBundle.load('assets/certificates/c1-ca.crt');
+      final Uint8List bytes = data.buffer.asUint8List();
+      
+      return Response.ok(
+        bytes,
+        headers: {
+          'Content-Type': 'application/x-x509-ca-cert',
+          'Content-Disposition': 'attachment; filename="localhost.crt"',
+          'Cache-Control': 'no-cache',
+        },
+      );
+    } catch (e) {
+      _log('Error serving certificate: $e');
+      return Response.internalServerError(
+        body: 'Error loading certificate file',
+      );
+    }
   }
 
   // Add logging method

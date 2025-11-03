@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+assets/certificates/c1-ca.crt
+assets/certificates/c1-ca.pem
+.gitignore
+assets/certificates/c1-key.key
+assets/certificates/c1-key.pem

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'services/server_manager.dart';
 import 'services/error_handler.dart';
 import 'services/session_manager.dart';
@@ -177,6 +178,36 @@ class _ServerControlPageState extends State<ServerControlPage> {
         );
       },
     );
+  }
+
+  Future<void> _installCertificate() async {
+    try {
+      final certUrl = '${_serverManager.url}/cert';
+      
+      // Use InAppBrowser to open the certificate download URL
+      // This will trigger the native iOS download prompt
+      await InAppBrowser.openWithSystemBrowser(
+        url: WebUri(certUrl),
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Opening certificate download...'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening certificate: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _toggleWebView() {
@@ -372,6 +403,24 @@ class _ServerControlPageState extends State<ServerControlPage> {
                     : null,
                 icon: const Icon(Icons.web),
                 label: const Text('Open in WebView'),
+                style: OutlinedButton.styleFrom(
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Install Certificate Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: OutlinedButton.icon(
+                onPressed: status == ServerStatus.running
+                    ? _installCertificate
+                    : null,
+                icon: const Icon(Icons.security),
+                label: const Text('Install Certificate'),
                 style: OutlinedButton.styleFrom(
                   textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
