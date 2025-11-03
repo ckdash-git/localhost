@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'services/server_manager.dart';
 import 'services/error_handler.dart';
@@ -37,6 +38,7 @@ class _ServerControlPageState extends State<ServerControlPage> {
   final ServerManager _serverManager = ServerManager();
   final ErrorHandler _errorHandler = ErrorHandler();
   final SessionManager _sessionManager = SessionManager();
+  static const MethodChannel _certificateChannel = MethodChannel('com.example.certificate_install_demo/certificate');
   bool _isLoading = false;
   bool _showWebView = false;
   StreamSubscription<ServerStatus>? _statusSubscription;
@@ -184,16 +186,15 @@ class _ServerControlPageState extends State<ServerControlPage> {
     try {
       final certUrl = '${_serverManager.url}/cert';
       
-      // Use InAppBrowser to open the certificate download URL
-      // This will trigger the native iOS download prompt
-      await InAppBrowser.openWithSystemBrowser(
-        url: WebUri(certUrl),
-      );
+      // Call native iOS method to open certificate in SFSafariViewController
+      await _certificateChannel.invokeMethod('installCertificate', {
+        'url': certUrl,
+      });
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Opening certificate download...'),
+            content: Text('Opening certificate in Safari...'),
             backgroundColor: Colors.green,
           ),
         );
